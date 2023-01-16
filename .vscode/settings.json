@@ -1,0 +1,11 @@
+{
+    //工作区选项页
+    "python.linting.pylintEnabled": false,//是否使用 pylint 对Python进行代码检查
+    "python.linting.flake8Enabled": true, // 是否使用 Flake8 对 Python 文件进行代码检查
+    "python.formatting.provider": "yapf", //格式化选项，包括autopep8、black、yapf
+    "python.linting.flake8Args": ["--max-line-length=248"], //单行最长字符长度：248
+    "python.linting.enabled": true,  //是否启用代码检查
+    "editor.formatOnPaste": true, //是否对粘贴内容自动格式化
+    "editor.formatOnSave": true, //保存的时候是否自动格式化
+
+}
