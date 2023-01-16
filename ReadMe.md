@@ -14,33 +14,63 @@
 
 
 
-# 快速开始
+# 部署
 
 
 
-1. 搭建 Hexo 博客
+## 安装
 
-   > 如果你还没有 Hexo 博客，请按照 [Hexo 官方文档](https://hexo.io/zh-cn/docs/) 进行安装、建站。
-
-2. 安装[Python](https://www.python.org/)，安装脚本
-
-   ```
-   
-   ```
-
-   
-
-3. 安装Quicker（可选、推荐安装），粘贴动作
+>前提已经安装了Hexo、Python，如果没有安装，需要先安装
+>
+>具体安装方式自行上网查询
+>
+>还需要安装Quicker（可选），推荐安装，可以更加快捷的发布
 
 
 
-# 使用方式
+下载克隆本仓库
 
-## 配置
+```git
+git clone https://github.com/l739217783/Obsidian2Hexo.git
+```
+
+或者直接下载
+
+
+
+结构如下
+
+```
+Obsidian2Hexo
+ ├── assets
+ │   ├── image-20230116183325452.png
+ │   └── image-20230116183414508.png
+ ├── Front_matter_edit.py   <------依赖脚本
+ ├── Ob2Hexo.py   <------同步脚本
+ └── ReadMe.md
+```
+
+
+
+
+
+
+
+## 配置脚本
 
 需要先设置下位置
 
-编辑`Ob2Hexo.py`脚本，将下面变量修改成个人使用的对应位置即可
+编辑`Ob2Hexo.py`脚本，将其中变量修改成个人使用的对应位置即可
+
+```
+Obsidian2Hexo
+ ├── assets
+ │   ├── image-20230116183325452.png
+ │   └── image-20230116183414508.png
+ ├── Front_matter_edit.py   
+ ├── Ob2Hexo.py   <------
+ └── ReadMe.md
+```
 
 - `ob_path`：Obsidian库的位置
 - `photo_path`：Obsidian库存储图片的位置
@@ -49,7 +79,11 @@
 
 
 
-有安装Quicker的话，编辑下quicker粘贴的动作，修改下面的运行脚本
+## 配置Quicker
+
+有安装Quicker的话，粘贴这个动作
+
+编辑下quicker粘贴的动作，修改下面的运行脚本
 
 ![image-20230116183325452](assets/image-20230116183325452.png)
 
@@ -59,8 +93,31 @@
 
 ![image-20230116183414508](assets/image-20230116183414508.png)
 
+
+
+
+
+# 使用方式
+
+
+
 ## 脚本同步
 
-如果没有安装Quicker的话，那么直接在对应的
+如果没有安装Quicker的话，那么直接用脚步同步即可
 
-有安装Quicker
+在`Ob2Hexo.py`所在目录下运行以下命令即可
+
+`xxx`为要同步的文章，不用写后缀`.md`
+
+```Python
+python Ob2Hexo.py xxx
+```
+
+
+
+
+
+## Quicker同步
+
+有安装Quicker的话，直接选中要同步的文件标题，运行分享的动作即可
+
