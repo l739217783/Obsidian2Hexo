@@ -10,8 +10,8 @@
 - 检索文件是否有Front-matter
 - 检索Front-matter中标题名是否与文件名相同
 - 修改任意属性和值
-Todo:字段（标签）是否有#，有的去除
-Todo:使用正则检测时间格式是否符合特定格式
+TODO:字段（标签）是否有#，有的去除
+TODO:使用正则检测时间格式是否符合特定格式
 """
 import os
 import re
@@ -32,10 +32,11 @@ def rw_file(func):
                 content = r.readlines()  # 获取全文(list)，用于划分
                 yaml_row = len(result.group().split('\n'))  # YAML区域的行数
                 yaml_content = content[0:yaml_row]  # Front-matter
-                body = content[yaml_row + 1:]  # 正文
+                body = content[yaml_row:]  # 正文
 
                 if func.__name__ == 'get_info':
-                    return func(yaml_content, body, *args, **kw)  # 如果是读取信息，直接返回信息
+                    # 如果是读取信息，直接返回信息
+                    return func(yaml_content, body, *args, **kw)
 
             except AttributeError:
                 print(f'{os.path.split(kw["path"])[1]},没有Front-matter')
@@ -60,19 +61,13 @@ def get_info(yaml_content: list, body: list):
 
 
 @rw_file
-def edit_attr(
-    yaml_content: list,
-    body: list,
-    attr_before: str,
-    attr_after: str,
-):
+def edit_attr(yaml_content: list, body: list, attr_before: str, attr_after: str):
     """修改属性名称
     @param yaml_content:Front-matter内容
     @param body:正文内容
     @param attr_before:需要修改的属性名称
     @param attr_after:修改后的属性名称
     """
-
     for index, value in enumerate(yaml_content):
         if value.find(attr_before) > -1 and value.find(':') > -1:
             s_attr, s_value = value.split(':', 1)  # 获取属性名称和值
@@ -84,12 +79,7 @@ def edit_attr(
 
 
 @rw_file
-def edit_value(
-    yaml_content: list,
-    body: list,
-    attr: str,
-    up_value: str,
-):
+def edit_value(yaml_content: list, body: list, attr: str, up_value: str):
     """修改属性值
     @param yaml_content:Front-matter内容
     @param body:正文内容
@@ -138,10 +128,8 @@ def sx(x):
     @param x:
     @return:
     """
-    ignore = [
-        r'C:\0资源库\0_笔记库\.obsidian', r"C:\0资源库\0_笔记库\.stfolder", r"C:\0资源库\0_笔记库\.trash", r"C:\0资源库\0_笔记库\assets",
-        r"C:\0资源库\0_笔记库\config", r"C:\0资源库\0_笔记库\config\Templates"
-    ]  # 要忽略，跳过的文件（例如工作区文件就肯定是没有Front-matter的）
+    ignore = [r'C:\0资源库\0_笔记库\.obsidian', r"C:\0资源库\0_笔记库\.stfolder", r"C:\0资源库\0_笔记库\.trash", r"C:\0资源库\0_笔记库\assets", r"C:\0资源库\0_笔记库\config",
+              r"C:\0资源库\0_笔记库\config\Templates"]  # 要忽略，跳过的文件（例如工作区文件就肯定是没有Front-matter的）
 
     for i in ignore:
         if x.find(i) > -1:
@@ -158,5 +146,8 @@ if __name__ == '__main__':
     #             file_path = root + '/' + i
     #             edit_attr()
 
-    file_path = r"C:\Hexo\source\_posts\lin.md"
-    print(get_info())
+    file_path = r"C:\0系统库\桌面\测试\解决Hexo图片无法显示问题.md"
+    edit_attr("date created", "data")
+    edit_attr("name", "title")
+    # print(get_info())
+    # print(get_info())
