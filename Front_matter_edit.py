@@ -61,18 +61,38 @@ def get_info(yaml_content: list, body: list):
 
 
 @rw_file
-def edit_attr(yaml_content: list, body: list, attr_before: str, attr_after: str):
+def edit_attr(yaml_content: list, body: list, attr_before: str = None, attr_after: str = None, replace_dict: dict = None) -> str:
     """修改属性名称
     @param yaml_content:Front-matter内容
     @param body:正文内容
     @param attr_before:需要修改的属性名称
     @param attr_after:修改后的属性名称
+    允许单个替换或者多个替换(如果同时提供单个替换和多个替换，多个替换优先级高于单个替换)
+    单个替换,提供attr_before和attr_after参数
+    多个替换,仅提供replace_dict参数即可(键为要替换的属性名称，值为新属性名称)
     """
+
+    if (attr_after == None and attr_before == None) and replace_dict == None:
+        raise Exception("参数不能为空")
+    elif attr_before == None:
+        raise Exception("attr_before参数为空", "请提供需要修改的属性名称!")
+    elif attr_after == None:
+        raise Exception("attr_after参数为空", "请提供修改后的属性名称!")
+
     for index, value in enumerate(yaml_content):
-        if value.find(attr_before) > -1 and value.find(':') > -1:
-            s_attr, s_value = value.split(':', 1)  # 获取属性名称和值
-            s_attr = s_attr.replace(attr_before, attr_after)
-            yaml_content[index] = s_attr + ':' + s_value
+        if replace_dict:
+            # 有值，采用多个替换(根据提供的字典)
+            for item in replace_dict.items():
+                if value.find(item[0]) > -1 and value.find(':') > -1:
+                    s_attr, s_value = value.split(':', 1)  # 获取属性名称和值
+                    s_attr = s_attr.replace(item[0], item[1])
+                    yaml_content[index] = s_attr + ':' + s_value
+        else:
+            # 采用单个替换
+            if value.find(attr_before) > -1 and value.find(':') > -1:
+                s_attr, s_value = value.split(':', 1)  # 获取属性名称和值
+                s_attr = s_attr.replace(attr_before, attr_after)
+                yaml_content[index] = s_attr + ':' + s_value
 
     yaml_content.extend(body)  # 重新组合成全文(yaml_content+body)
     return ''.join(yaml_content)  # 列表转回文本
@@ -147,7 +167,9 @@ if __name__ == '__main__':
     #             edit_attr()
 
     file_path = r"C:\0系统库\桌面\测试\解决Hexo图片无法显示问题.md"
-    edit_attr("date created", "data")
-    edit_attr("name", "title")
-    # print(get_info())
-    # print(get_info())
+    a = {"date created": "data", "name": "title"}
+    # edit_attr(replace_dict=a)
+    edit_attr()
+    # edit_attr("name", "title")
+
+    # print(get_info())    # print(get_info())
