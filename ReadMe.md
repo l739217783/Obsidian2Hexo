@@ -28,13 +28,15 @@
 
 
 
-下载克隆本仓库
+通过以下方式之一下载
 
-```git
-git clone https://github.com/l739217783/Obsidian2Hexo.git
-```
+1. 拉取本仓库
 
-或者直接下载
+   ```
+   git clone https://github.com/l739217783/Obsidian2Hexo.git
+   ```
+2. [下载页面](https://github.com/l739217783/Obsidian2Hexo/releases/tag/v0.1)
+3. [阿里云](https://www.aliyundrive.com/s/toS1MobGC17)
 
 
 
@@ -60,28 +62,33 @@ Obsidian2Hexo
 
 需要先设置下位置
 
-编辑`Ob2Hexo.py`脚本，将其中变量修改成个人使用的对应位置即可
+1. 编辑`Ob2Hexo.py`脚本
 
-```
-Obsidian2Hexo
- ├── assets
- │   ├── image-20230116183325452.png
- │   └── image-20230116183414508.png
- ├── Front_matter_edit.py   
- ├── Ob2Hexo.py   <------
- └── ReadMe.md
-```
+   ```
+   Obsidian2Hexo
+    ├── assets
+    │   ├── image-20230116183325452.png
+    │   └── image-20230116183414508.png
+    ├── Front_matter_edit.py   
+    ├── Ob2Hexo.py   <------
+    └── ReadMe.md
+   ```
 
-- `ob_path`：Obsidian库的位置
-- `photo_path`：Obsidian库存储图片的位置
-- `hexo_path`：Hexo存放文章的位置
-- `hexo_photo_path`：Hexo存放图片的位置
+2. 将以下变量修改成个人使用的对应位置即可
+
+   - `ob_path`：Obsidian库的位置
+
+   - `photo_path`：Obsidian库存储图片的位置
+
+   - `hexo_path`：Hexo存放文章的位置
+
+   - `hexo_photo_path`：Hexo存放图片的位置
 
 
 
 ## 配置Quicker
 
-有安装Quicker的话，粘贴这个动作
+有安装Quicker的话，复制粘贴这个[动作](https://getquicker.net/Sharedaction?code=a07971ae-343a-478c-e26f-08daf70dc81e&fromMyShare=True)
 
 编辑下quicker粘贴的动作，修改下面的运行脚本
 
@@ -94,6 +101,20 @@ Obsidian2Hexo
 ![image-20230116183414508](assets/image-20230116183414508.png)
 
 
+
+默认只同步到本地，如果要分享到外网，需要增加一句`hexo d`
+
+修改如下
+
+![image-20230116194617045](assets/image-20230116194617045.png)
+
+修改成如下即可
+
+```
+hexo clean
+hexo g
+hexo d
+```
 
 
 
@@ -121,3 +142,6 @@ python Ob2Hexo.py xxx
 
 有安装Quicker的话，直接选中要同步的文件标题，运行分享的动作即可
 
+演示效果：
+
+![效果演示](assets/效果演示.gif)
