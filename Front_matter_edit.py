@@ -72,13 +72,6 @@ def edit_attr(yaml_content: list, body: list, attr_before: str = None, attr_afte
     多个替换,仅提供replace_dict参数即可(键为要替换的属性名称，值为新属性名称)
     """
 
-    if (attr_after == None and attr_before == None) and replace_dict == None:
-        raise Exception("参数不能为空")
-    elif attr_before == None:
-        raise Exception("attr_before参数为空", "请提供需要修改的属性名称!")
-    elif attr_after == None:
-        raise Exception("attr_after参数为空", "请提供修改后的属性名称!")
-
     for index, value in enumerate(yaml_content):
         if replace_dict:
             # 有值，采用多个替换(根据提供的字典)
@@ -148,8 +141,10 @@ def sx(x):
     @param x:
     @return:
     """
-    ignore = [r'C:\0资源库\0_笔记库\.obsidian', r"C:\0资源库\0_笔记库\.stfolder", r"C:\0资源库\0_笔记库\.trash", r"C:\0资源库\0_笔记库\assets", r"C:\0资源库\0_笔记库\config",
-              r"C:\0资源库\0_笔记库\config\Templates"]  # 要忽略，跳过的文件（例如工作区文件就肯定是没有Front-matter的）
+    ignore = [
+        r'C:\0资源库\0_笔记库\.obsidian', r"C:\0资源库\0_笔记库\.stfolder", r"C:\0资源库\0_笔记库\.trash", r"C:\0资源库\0_笔记库\assets",
+        r"C:\0资源库\0_笔记库\config", r"C:\0资源库\0_笔记库\config\Templates"
+    ]  # 要忽略，跳过的文件（例如工作区文件就肯定是没有Front-matter的）
 
     for i in ignore:
         if x.find(i) > -1:
@@ -167,9 +162,4 @@ if __name__ == '__main__':
     #             edit_attr()
 
     file_path = r"C:\0系统库\桌面\测试\解决Hexo图片无法显示问题.md"
-    a = {"date created": "data", "name": "title"}
-    # edit_attr(replace_dict=a)
-    edit_attr()
-    # edit_attr("name", "title")
-
-    # print(get_info())    # print(get_info())
+    edit_attr("name")
