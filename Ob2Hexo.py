@@ -138,11 +138,13 @@ class Ob2Hexo():
         Args:
             file_name (str): 文件名
         """
+        title = re.compile(f'^{self.file_name}$')
 
         # 复制文件
         for root, dirs, files in os.walk(self.ob_path):
             for file in files:
-                if os.path.splitext(file)[0] == self.file_name:
+                result = title.search(os.path.splitext(file)[0])
+                if result:
                     if os.path.exists(self.hexo_file_path):
                         while (True):
                             answer = input('文件已存在，是否覆盖文件(yes/no)?')
@@ -177,9 +179,9 @@ class Ob2Hexo():
 
 
 if __name__ == '__main__':
-    # file_name = sys.argv[1]
-    file_name = r"2023.01.18"  # 测试使用
+    file_name = sys.argv[1]
+    # file_name = r"2023.01.18 204040"  # 测试使用
     # h_file_name = r"C:\Hexo\source\_posts\图片路径测试.md"  # 测试使用
-
+    # print(file_name)
     ob2hexo = Ob2Hexo(file_name)
     ob2hexo.main()
