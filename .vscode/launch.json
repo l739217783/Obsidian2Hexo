@@ -5,12 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "调试控制台",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "internalConsole",
             "justMyCode": true
-        }
-    ]
+        },
+        {
+        "name": "终端",
+        "type": "python",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal",
+        "justMyCode": true
+    }
+]
 }

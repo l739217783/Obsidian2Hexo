@@ -122,9 +122,13 @@ class Ob2Hexo():
 
         # 获取md文档中的所有图片链接,修改图片路径成相对路径
         for photo in result:
-            photo_name = os.path.split(photo[1])[1].replace('%20', ' ')  # 移除路径，编码转换回空格
-            print(photo, photo_name)
-            shutil.copyfile(os.path.join(self.photo_path, photo_name), os.path.join(self.hexo_photo_path, photo_name))
+            photo_name = os.path.split(photo[1])[1]  # 无转码的无路径图片名
+            if photo_name.find('.') == -1:
+                # 图片名没有.的跳过，有可能是说明：`![]()` 或者其他特殊情况
+                continue
+            r_photo_name = photo_name.replace('%20', ' ')  # 移除空格，编码转换回空格(复制图片使用)
+            # print(photo, photo_name, r_photo_name)
+            shutil.copyfile(os.path.join(self.photo_path, r_photo_name), os.path.join(self.hexo_photo_path, r_photo_name))
             content = content.replace(photo[1], f"{os.path.join('../images/',photo_name)}")
 
         self.write_file(file_path, content)
@@ -173,8 +177,8 @@ class Ob2Hexo():
 
 
 if __name__ == '__main__':
-    file_name = sys.argv[1]
-    # file_name = r"图片路径测试"  # 测试使用
+    # file_name = sys.argv[1]
+    file_name = r"2023.01.18"  # 测试使用
     # h_file_name = r"C:\Hexo\source\_posts\图片路径测试.md"  # 测试使用
 
     ob2hexo = Ob2Hexo(file_name)
