@@ -4,5 +4,6 @@
   "hexo_path": "C:/Hexo/source/_posts",
   "hexo_photo_path": "C:/Hexo/source/images",
   "rep_dict": { "name": "title", "date created": "data" },
-  "del_list": ["date updated"]
+  "del_list": ["date updated"],
+  "sync_tags": "public"
 }

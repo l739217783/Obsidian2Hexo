@@ -12,6 +12,7 @@
 - 修改任意属性和值
 TODO:字段（标签）是否有#，有的去除
 TODO:使用正则检测时间格式是否符合特定格式
+
 """
 import os
 import re
@@ -92,19 +93,34 @@ def edit_attr(yaml_content: list, body: list, attr_before: str = None, attr_afte
 
 
 @rw_file
-def edit_value(yaml_content: list, body: list, attr: str, up_value: str):
+def edit_value(yaml_content: list, body: list, attr: str, before_value: str = None, after_value: str = None):
     """修改属性值
-    @param yaml_content:Front-matter内容
-    @param body:正文内容
-    @param attr:需要修改的属性名称
-    @param up_value:对应属性需要修改的值
-    @return:
+    值如果是单个,仅用提供更改后的值
+    值如果是多个,需要准确提供修改前和修改后的值
+    Args:
+        yaml_content (list): Front-matter内容
+        body (list): 正文内容
+        attr (str): 值属于哪个属性下
+        before_value (str): 更改前的值
+        after_value (str): 更改后的值
     """
-    for index, value in enumerate(yaml_content):
-        if value.find(attr) > -1 and value.find(':') > -1:
-            s_attr, s_value = value.split(':', 1)
-            yaml_content[index] = s_attr + ':' + up_value + '\n'
+    r_value = re.compile(r'[a-z\s]+[:]')
 
+    for index, value in enumerate(yaml_content):
+        if r_value.search(value) and value.find(attr) > -1:
+            yaml_attr, yaml_value = value.split(':', 1)
+            # 判断值是否数组类型
+            if yaml_value != '\n':
+                yaml_content[index] = yaml_attr + ': ' + after_value + '\n'
+            else:
+                yaml_dict = yaml_list2dict()
+                if not before_value and not after_value:
+                    raise Exception('请提供准确参数')
+
+                # 计算位置、整体位置位于：当前行+要更新的属性值在数组中的位置
+                up_value_index = index + yaml_dict[attr].index(before_value) + 1
+                yaml_content[up_value_index] = yaml_content[up_value_index].replace(before_value, after_value)
+            break
     yaml_content.extend(body)  # 重新组合成全文(yaml_content+body)
     return ''.join(yaml_content)  # 列表转回文本
 
@@ -114,25 +130,121 @@ def delete_attr(yaml_content: list, body: list, attr: str):
     """删除指定属性
     @param yaml_content:Front-matter内容
     @param body:正文内容
-    @param attr: 需要删除（移除）的attr
+    @param attr: 需要删除（移除）的属性
     @return:
     """
-    for index, value in enumerate(yaml_content):
-        if value.find(attr) > -1 and value.find(':') > -1:
-            yaml_content.remove(value)
+    r_value = re.compile(r'[a-z\s]+[:]')
+    n_yaml_list = []
 
-    yaml_content.extend(body)  # 重新组合成全文(yaml_content+body)
-    return ''.join(yaml_content)  # 列表转回文本
+    for index, value in enumerate(yaml_content):
+        if r_value.search(value) and value.find(attr) > -1:
+            yaml_attr, yaml_value = value.split(':')
+            # 判断值是否数组类型
+            if yaml_value != '\n':
+                yaml_content.remove(value)
+            else:
+                # 数组类型,切片重新组合
+                yaml_dict = yaml_list2dict()
+                start = index + 1 + len(yaml_dict[yaml_attr])
+                n_yaml_list.extend(yaml_content[:index])
+                n_yaml_list.extend(yaml_content[start:])
+            break
+    n_yaml_list.extend(body)  # 重新组合成全文(yaml_content+body)
+    return ''.join(n_yaml_list)  # 列表转回文本
+
+
+@rw_file
+def delete_value(yaml_content: list, body: list, del_dict: list):
+    """删除指定属性值(仅适用于多个值，单个值直接使用delete_attr删除指定属性)
+    注:采取计算行数方式,如果采用全局遍历的话，可能会误删其他的
+    @param yaml_content:Front-matter内容
+    @param body:正文内容
+    @param del_dict: 需要删除值，[哪个属性下:值名称] [attr:value]
+    @return:
+    """
+    r_value = re.compile(r'[a-z\s]+[:]')
+    n_yaml_list = []
+
+    for index, value in enumerate(yaml_content):
+        if r_value.search(value) and value.find(del_dict[0]) > -1:
+            yaml_attr, yaml_value = value.split(':', 1)
+            # 判断值是否数组类型
+            if yaml_value != '\n':
+                yaml_content.remove(value)
+                n_yaml_list.extend(yaml_content)
+            else:
+                # 数组类型,采用切片重新组合
+                yaml_dict = yaml_list2dict()
+                start = index + yaml_dict[yaml_attr].index(del_dict[1]) + 1
+                n_yaml_list.extend(yaml_content[:start])
+                n_yaml_list.extend(yaml_content[start + 1:])
+            break
+
+    n_yaml_list.extend(body)  # 重新组合成全文(yaml_content+body)
+    return ''.join(n_yaml_list)  # 列表转回文本
 
 
 @rw_file
 def replce_shuangyin(yaml_content, body):
-    """移除YAML区域双引号"""
+    """移除YAML区域所有双引号"""
     for index, value in enumerate(yaml_content):
         yaml_content[index] = value.replace('"', "")
 
     yaml_content.extend(body)  # 重新组合成全文(yaml_content+body)
     return ''.join(yaml_content)  # 列表转回文本
+
+
+def yaml_list2dict() -> dict:
+    """将yaml列表转换为字典"""
+
+    r_value = re.compile(r'[a-z\s]+[:]')
+    yaml_content = get_info()['yaml']
+    yaml_dict = {}
+    yaml_key = None
+    yaml_value = None
+    switch = False
+
+    for index, value in enumerate(yaml_content):
+
+        if switch and value.find('---') == -1 and not r_value.search(value):
+            yaml_dict[yaml_key].append(value.replace('-', '').strip())
+        else:
+            if r_value.search(value):
+                yaml_key, yaml_value = value.split(':', 1)
+                # 值不等于换行，直接写入字典
+                if yaml_value != '\n':
+                    yaml_dict[yaml_key] = yaml_value.strip()
+                else:
+                    yaml_dict[yaml_key] = []
+                    switch = True
+                    continue
+
+            switch = False
+    return yaml_dict
+
+
+def get_tags() -> list:
+    """返回Front-matter的所有标签"""
+    yaml = get_info()['yaml']
+    taglist = []
+    tag_min = 0
+    tag_max = 0
+    symbol = re.compile(r'([a-z\s]+[:])')
+    max_yaml = re.compile(r'\-{3}')
+
+    # 查找标签区域
+    for index, attr in enumerate(yaml):
+        if attr.find("tags:") > -1:
+            tag_min += index + 1
+            continue
+
+        if tag_min:
+            if symbol.search(attr) or max_yaml.search(attr):
+                tag_max = index
+                break
+
+    taglist = [i.replace('\n', '').replace('- ', '').strip() for i in yaml[tag_min:tag_max]]
+    return taglist
 
 
 def sx(x):
@@ -161,5 +273,5 @@ if __name__ == '__main__':
     #             file_path = root + '/' + i
     #             edit_attr()
 
-    file_path = r"C:\0系统库\桌面\测试\解决Hexo图片无法显示问题.md"
-    edit_attr("name")
+    # print(get_tags())
+    file_path = r"C:\0系统库\桌面\Python_链接字符串.md"

@@ -19,7 +19,7 @@ import json
 
 
 class Ob2Hexo():
-    def __init__(self, file_name: str) -> None:
+    def __init__(self, file_name: str = None) -> None:
         try:
             self.file_name = file_name  # 单文件名,无后缀
             with open("setting.json", encoding='utf-8') as f:
@@ -31,7 +31,9 @@ class Ob2Hexo():
                 self.hexo_photo_path = setting["hexo_photo_path"]  # Hexo存放图片的位置
                 self.rep_dict = setting["rep_dict"]  # 需要替换的Front-matter属性名称
                 self.del_list = setting["del_list"]  # 需要删除的Front-matter属性名称
-                self.hexo_file_path = os.path.join(self.hexo_path, self.file_name + '.md')  # Hexo文章存放文件路径
+                self.sync_tags = setting["sync_tags"]  # 同步标签，用于存量同步
+                self.hexo_file_path = os.path.join(self.hexo_path, self.file_name + '.md') if file_name else None  # Hexo文章存放文件路径
+                # 如果没有传入文件名,可能采用存量同步(tag_sync,update_sync),设置为None
             if not os.path.exists("Front_matter_edit.py"):
                 raise Exception('依赖文件确缺失')
         except FileNotFoundError:
@@ -132,6 +134,35 @@ class Ob2Hexo():
             content = content.replace(photo[1], f"{os.path.join('../images/',photo_name)}")
 
         self.write_file(file_path, content)
+
+    def tags_sync(self, rpl_switch: bool = False):
+        """对包含指定标签的文件全部更新到Hexo
+        注意：会进行覆盖操作，不会提示
+        Args:
+            rpl_switch (_type_): Hexo是否移除Obsidian的公开标签(只用于知道是否同步Hexo,所以Hexo没必要有这个标签)
+        """
+
+        for root, dirs, files in os.walk(self.ob_path):
+            for file in files:
+                fm.file_path = os.path.join(root, file)
+                tag_list = fm.get_tags()
+                if self.sync_tags in tag_list:
+                    shutil.copyfile(os.path.join(root, file), os.path.join(self.hexo_path, file))
+                    if rpl_switch:
+                        fm.file_path = os.path.join(self.hexo_path, file)
+                        fm.delete_value(del_dict=['tags', self.sync_tags])  # 删除公开标签
+
+    def update_sync(self):
+        """更新同步
+        对Hexo现有的文件全部更新(从Obsidian拉取)
+        注意：会进行覆盖操作，不会提示
+        """
+        Hexo_file_list = [i for i in os.listdir(self.hexo_path) if i.endswith('.md')]
+
+        for root, dirs, files in os.walk(self.ob_path):
+            for file in files:
+                if file in Hexo_file_list:
+                    shutil.copyfile(os.path.join(root, file), os.path.join(self.hexo_path, file))
 
     def main(self):
         """给定文件名，拷贝文件(md、相关图片)到hexo目录下
