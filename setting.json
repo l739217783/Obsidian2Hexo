@@ -3,7 +3,11 @@
   "photo_path": "C:/0资源库/0_笔记库/assets",
   "hexo_path": "C:/Hexo/source/_posts",
   "hexo_photo_path": "C:/Hexo/source/images",
-  "rep_dict": { "name": "title", "date created": "data" },
-  "del_list": ["date updated"],
+  "rep_dict": {
+    "name": "title",
+    "date created": "date",
+    "date updated": "updated"
+  },
+  "del_list": [],
   "sync_tags": "public"
 }

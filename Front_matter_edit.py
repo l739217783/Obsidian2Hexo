@@ -14,7 +14,7 @@ TODO:字段（标签）是否有#，有的去除
 TODO:使用正则检测时间格式是否符合特定格式
 
 """
-import os
+
 import re
 from functools import wraps
 
@@ -27,7 +27,6 @@ def rw_file(func):
             _regex = re.compile(r'([-]{3})(.*?)([-]{3})', re.S | re.M)
             result = _regex.search(r.read())
             r.seek(0)
-
             try:
                 # 划分内容
                 content = r.readlines()  # 获取全文(list)，用于划分
@@ -38,14 +37,12 @@ def rw_file(func):
                 if func.__name__ == 'get_info':
                     # 如果是读取信息，直接返回信息
                     return func(yaml_content, body, *args, **kw)
-
             except AttributeError:
-                print(f'{os.path.split(kw["path"])[1]},没有Front-matter')
+                # print(f'没有Front-matter：{os.path.split(kw["path"])[1]}')
+                # print(f'没有Front-matter：{file_path}')
                 return None
 
-            # 执行需要的操作
-            w_content = func(yaml_content, body, *args, **kw)
-
+        w_content = func(yaml_content, body, *args, **kw)  # 执行需要的操作
         with open(file_path, 'w', encoding='utf-8') as w:
             w.write(w_content)
 
@@ -133,15 +130,20 @@ def delete_attr(yaml_content: list, body: list, attr: str):
     @param attr: 需要删除（移除）的属性
     @return:
     """
+    if not attr:
+        # 如果配置信息未填写,直接返回
+        return None
+
     r_value = re.compile(r'[a-z\s]+[:]')
     n_yaml_list = []
 
     for index, value in enumerate(yaml_content):
         if r_value.search(value) and value.find(attr) > -1:
-            yaml_attr, yaml_value = value.split(':')
+            yaml_attr, yaml_value = value.split(':', 1)
             # 判断值是否数组类型
             if yaml_value != '\n':
                 yaml_content.remove(value)
+                n_yaml_list.extend(yaml_content)
             else:
                 # 数组类型,切片重新组合
                 yaml_dict = yaml_list2dict()
@@ -225,7 +227,12 @@ def yaml_list2dict() -> dict:
 
 def get_tags() -> list:
     """返回Front-matter的所有标签"""
-    yaml = get_info()['yaml']
+    try:
+        yaml = get_info()['yaml']
+    except TypeError:
+        # 提取错误，直接返回空标签列表
+        return []
+
     taglist = []
     tag_min = 0
     tag_max = 0

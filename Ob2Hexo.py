@@ -144,27 +144,29 @@ class Ob2Hexo():
 
         for root, dirs, files in os.walk(self.ob_path):
             for file in files:
-                fm.file_path = os.path.join(root, file)
-                tag_list = fm.get_tags()
-                if self.sync_tags in tag_list:
-                    hexo_file_path = os.path.join(self.hexo_path, file)
-                    shutil.copyfile(os.path.join(root, file), hexo_file_path)
+                if file.endswith('.md'):
+                    fm.file_path = os.path.join(root, file)
+                    tag_list = fm.get_tags()
+                    if self.sync_tags in tag_list:
+                        print(f'更新文章：{file}')
+                        hexo_file_path = os.path.join(self.hexo_path, file)
+                        shutil.copyfile(os.path.join(root, file), hexo_file_path)
 
-                    # front-matter转换
-                    fm.file_path = hexo_file_path
-                    if self.del_list:
-                        for del_str in self.del_list:
-                            fm.delete_attr(del_str)  # 删除不需要属性
-
-                    if rpl_switch:
+                        # front-matter转换
                         fm.file_path = hexo_file_path
-                        fm.delete_value(del_dict=['tags', self.sync_tags])  # 删除公开标签
+                        if self.del_list:
+                            for del_str in self.del_list:
+                                fm.delete_attr(del_str)  # 删除不需要属性
 
-                    if self.rep_dict:
-                        fm.edit_attr(replace_dict=self.rep_dict)  # 替换标签
+                        if rpl_switch:
+                            fm.file_path = hexo_file_path
+                            fm.delete_value(del_dict=['tags', self.sync_tags])  # 删除公开标签
 
-                    self.adn2note(hexo_file_path)  # callout 转换
-                    self.get_photo(hexo_file_path)  # 复制图片到Hexo目录下
+                        if self.rep_dict:
+                            fm.edit_attr(replace_dict=self.rep_dict)  # 替换标签
+
+                        self.adn2note(hexo_file_path)  # callout 转换
+                        self.get_photo(hexo_file_path)  # 复制图片到Hexo目录下
 
     def update_sync(self):
         """更新同步
@@ -243,3 +245,5 @@ if __name__ == '__main__':
     # print(file_name)
     ob2hexo = Ob2Hexo(file_name)
     ob2hexo.main()
+    # ob2hexo = Ob2Hexo()
+    # ob2hexo.tags_sync(True)
