@@ -64,9 +64,9 @@ def edit_attr(yaml_content: list, body: list, attr_before: str = None, attr_afte
     @param yaml_content:Front-matter内容
     @param body:正文内容
     @param attr_before:需要修改的属性名称
-    @param attr_after:修改后的属性名称
-    允许单个替换或者多个替换(如果同时提供单个替换和多个替换，多个替换优先级高于单个替换)
-    单个替换,提供attr_before和attr_after参数
+    @param attr_after:修改后的属性名称\n
+    允许单个替换或者多个替换(如果同时提供单个替换和多个替换，多个替换优先级高于单个替换)\n
+    单个替换,提供attr_before和attr_after参数\n
     多个替换,仅提供replace_dict参数即可(键为要替换的属性名称，值为新属性名称)
     """
 
@@ -92,8 +92,8 @@ def edit_attr(yaml_content: list, body: list, attr_before: str = None, attr_afte
 @rw_file
 def edit_value(yaml_content: list, body: list, attr: str, before_value: str = None, after_value: str = None):
     """修改属性值
-    值如果是单个,仅用提供更改后的值
-    值如果是多个,需要准确提供修改前和修改后的值
+    值如果是单个,仅用提供attr+更改后的值
+    值如果是多个,需要提供attr+修改前+修改后的值
     Args:
         yaml_content (list): Front-matter内容
         body (list): 正文内容
@@ -199,29 +199,25 @@ def replce_shuangyin(yaml_content, body):
 def yaml_list2dict() -> dict:
     """将yaml列表转换为字典"""
 
-    r_value = re.compile(r'[a-z\s]+[:]')
+    r_key = re.compile(r'[a-z\s]+[:]')
     yaml_content = get_info()['yaml']
     yaml_dict = {}
     yaml_key = None
     yaml_value = None
-    switch = False
 
     for index, value in enumerate(yaml_content):
-
-        if switch and value.find('---') == -1 and not r_value.search(value):
-            yaml_dict[yaml_key].append(value.replace('-', '').strip())
-        else:
-            if r_value.search(value):
+        try:
+            if r_key.search(value) and value.find('---') == -1:
                 yaml_key, yaml_value = value.split(':', 1)
-                # 值不等于换行，直接写入字典
-                if yaml_value != '\n':
-                    yaml_dict[yaml_key] = yaml_value.strip()
-                else:
+                # 值如果换行,就是数组,反之就是单个(直接写入字典)
+                if yaml_value == ' \n' or yaml_value == '\n':
                     yaml_dict[yaml_key] = []
-                    switch = True
-                    continue
-
-            switch = False
+                else:
+                    yaml_dict[yaml_key] = yaml_value.strip()
+            elif value.find('-') > -1 and value.find('---') == -1:
+                yaml_dict[yaml_key].append(value.replace('-', '').strip())
+        except AttributeError:
+            raise Exception('书写不规范,空值情况下,且冒号后面有多个空格')
     return yaml_dict
 
 
@@ -281,4 +277,5 @@ if __name__ == '__main__':
     #             edit_attr()
 
     # print(get_tags())
-    file_path = r"C:\0系统库\桌面\Python_链接字符串.md"
+    file_path = r"C:\0系统库\桌面\新建文件夹 (3)\回路：设计人生的增长引擎.md"
+    print(yaml_list2dict())
