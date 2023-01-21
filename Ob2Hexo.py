@@ -32,6 +32,7 @@ class Ob2Hexo():
                 self.rep_dict = setting["rep_dict"]  # 需要替换的Front-matter属性名称
                 self.del_list = setting["del_list"]  # 需要删除的Front-matter属性名称
                 self.sync_tags = setting["sync_tags"]  # 同步标签，用于存量同步
+                self.aliases_check = setting["aliases_check"]  # 别名检测(开启检测别名)
                 self.hexo_file_path = os.path.join(self.hexo_path, self.file_name + '.md') if file_name else None  # Hexo文章存放文件路径
                 # 如果没有传入文件名,可能采用存量同步(tag_sync,update_sync),设置为None
             if not os.path.exists("Front_matter_edit.py"):
@@ -222,6 +223,27 @@ class Ob2Hexo():
 
         # front-matter转换
         fm.file_path = self.hexo_file_path
+        if self.aliases_check:
+            # 别名检测
+            yaml_dict = fm.yaml_list2dict()
+            for i in yaml_dict.keys():
+
+                if i.find('aliases') > -1:
+                    while True:
+
+                        print('=' * 20, '\n')
+                        for index, value in enumerate(yaml_dict['aliases']):
+                            print(f"{index + 1}:{value}\n")
+                        print('=' * 20, '\n')
+
+                        answer = input('文件存在别名,采用别名的话,输入对应序号,否则输入No?')
+                        if int(answer) < len(yaml_dict['aliases']) and answer.isdigit() or answer.lower() == 'no':
+                            break
+
+                        os.system("cls")
+                    rpl_title = yaml_dict['aliases'][int(answer) - 1]
+                    fm.edit_value(attr='name', after_value=rpl_title)
+                    break
 
         if self.del_list:
             for del_str in self.del_list:
@@ -239,11 +261,12 @@ class Ob2Hexo():
 
 
 if __name__ == '__main__':
-    file_name = sys.argv[1]
-    # file_name = r"2023.01.18 204040"  # 测试使用
+    # file_name = sys.argv[1]
+    file_name = r"回路：设计人生的增长引擎"  # 测试使用
     # h_file_name = r"C:\Hexo\source\_posts\图片路径测试.md"  # 测试使用
     # print(file_name)
     ob2hexo = Ob2Hexo(file_name)
-    ob2hexo.main()
+    # ob2hexo.main()
+    print(ob2hexo.aliases_check)
     # ob2hexo = Ob2Hexo()
     # ob2hexo.tags_sync(True)
