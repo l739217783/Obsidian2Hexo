@@ -9,5 +9,6 @@
     "date updated": "updated"
   },
   "del_list": [],
-  "sync_tags": "public"
+  "sync_tags": "public",
+  "aliases_check": true
 }
