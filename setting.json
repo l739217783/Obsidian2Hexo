@@ -10,5 +10,6 @@
   },
   "del_list": [],
   "sync_tags": "public",
+  "syncTags_rep": true,
   "aliases_check": true
 }
