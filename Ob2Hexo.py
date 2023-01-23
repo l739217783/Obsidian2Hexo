@@ -87,6 +87,7 @@ class Ob2Hexo():
         adn = re.compile(r"\>\s*\[!.+\]\-?(.+)?")  # 匹配笔记块 + 折叠块
         black = re.compile(r'^\s$')
         quote = re.compile(r'>\s*.+')
+        null_quote = re.compile(r'>\s*\n')
         content = self.read_file(file_path, 'readline')
         switch = False
         tag = ['note', 'info', 'danger', 'warning']
@@ -108,9 +109,15 @@ class Ob2Hexo():
                 switch = True
             elif switch and quote.search(value):
                 content[index] = value.replace('>', '').strip() + '\n'
+            elif switch and null_quote.search(value):
+                content[index] = '\n'
             elif switch and black.search(value):
                 content[index] = '{% endnote %}\n\n'
                 switch = False
+
+            if index + 1 == len(content) and quote.search(value):
+                # 如果最后是引用,没有空行可以转换收尾标签,多添加一行收尾标签
+                content.append('{% endnote %}\n\n')
 
         content = ''.join(content)
         self.write_file(file_path, content)
@@ -261,7 +268,7 @@ class Ob2Hexo():
 
         if self.syncTags_rpl:
             # 移除公有标签
-            fm.delete_value({"tags": f"{self.sync_tags}"})
+            fm.delete_value(["tags", f"{self.sync_tags}"])
 
         if self.del_list:
             # 属性指定属性
@@ -279,8 +286,8 @@ class Ob2Hexo():
 
 
 if __name__ == '__main__':
-    file_name = sys.argv[1]
-    # file_name = r"2023.01.22"  # 测试使用
+    # file_name = sys.argv[1]
+    file_name = r"正则的绝对匹配和部分匹配"  # 测试使用
     # h_file_name = r"C:\Hexo\source\_posts\图片路径测试.md"  # 测试使用
     # print(file_name)
     ob2hexo = Ob2Hexo(file_name)
