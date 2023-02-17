@@ -21,22 +21,22 @@ from time import sleep
 
 class Ob2Hexo():
     def __init__(self, file_name: str = None) -> None:
+        # yapf:disable
         try:
-            self.file_name = file_name  # 单文件名,无后缀
+            self.file_name = file_name
             with open("setting.json", encoding='utf-8') as f:
-                # 获取配置信息
                 setting = json.load(f)
-                self.ob_path = setting["ob_path"]  # OB库的位置
-                self.photo_path = setting["photo_path"]  # OB库附件存放位置
-                self.hexo_path = setting["hexo_path"]  # Hexo存放文章的位置
-                self.hexo_photo_path = setting["hexo_photo_path"]  # Hexo存放图片的位置
-                self.rep_dict = setting["rep_dict"]  # 需要替换的Front-matter属性名称
-                self.del_list = setting["del_list"]  # 需要删除的Front-matter属性名称
-                self.sync_tags = setting["sync_tags"]  # 同步标签，用于存量同步
-                self.aliases_check = setting["aliases_check"]  # 别名检测(开启检测别名)
-                self.syncTags_rpl = setting["syncTags_rep"]  # 是否移除同步标签,默认开启
-                self.hexo_file_path = os.path.join(self.hexo_path, self.file_name + '.md') if file_name else None  # Hexo文章存放文件路径
-                # 如果没有传入文件名,可能采用存量同步(tag_sync,update_sync),设置为None
+                self.ob_path = setting["ob_path"]                  # OB库的位置
+                self.photo_path = setting["photo_path"]            # OB图片位置
+                self.hexo_path = setting["hexo_path"]              # Hexo文章位置
+                self.hexo_photo_path = setting["hexo_photo_path"]  # Hexo图片位置
+                self.rep_dict = setting["rep_dict"]                # 替换的属性
+                self.del_list = setting["del_list"]                # 删除的属性
+                self.sync_tags = setting["sync_tags"]              # 同步标签，用于存量同步
+                self.aliases_check = setting["aliases_check"]      # 别名检测,默认true
+                self.syncTags_rpl = setting["syncTags_rep"]        # 是否移除同步标签,默认true
+                self.hexo_file_path = os.path.join(self.hexo_path, self.file_name + '.md') if file_name else None
+                # Hexo文章存放文件路径,可能采用存量同步(tag_sync,update_sync),默认None
             if not os.path.exists("Front_matter_edit.py"):
                 raise Exception('依赖文件确缺失')
         except FileNotFoundError:
@@ -82,9 +82,7 @@ class Ob2Hexo():
 
     def adn2note(self, file_path):
         """callout转便签"""
-        # adn = re.compile(r'[>\s*[!].+\]')  # 笔记块类型
-        # adn_fold = re.compile(r'[>\s*[!].+\]-')  # 折叠块类型
-        adn = re.compile(r"\>\s*\[!.+\]\-?(.+)?")  # 匹配笔记块 + 折叠块
+        adn = re.compile(r"\>\s*\[!.+\]\-?(.+)?")  # 笔记块 + 折叠块
         black = re.compile(r'^\s$')
         quote = re.compile(r'>\s*.+')
         null_quote = re.compile(r'>\s*\n')
@@ -147,9 +145,9 @@ class Ob2Hexo():
 
     def tags_sync(self, rpl_switch: bool = False):
         """对包含指定标签的文件全部更新到Hexo
-        注意：会进行覆盖操作，不会提示
+        注意：会进行覆写操作，不会提示
         Args:
-            rpl_switch (_type_): Hexo是否移除Obsidian的公开标签(只用于知道是否同步Hexo,所以Hexo没必要有这个标签)
+            rpl_switch (bool): 是否移除公开标签
         """
 
         for root, dirs, files in os.walk(self.ob_path):
@@ -204,7 +202,7 @@ class Ob2Hexo():
                     self.get_photo(hexo_file_path)  # 复制图片到Hexo目录下
 
     def main(self):
-        """给定文件名，拷贝文件(md、相关图片)到hexo目录下
+        """给定文件名，拷贝文件(md、相关图片)到hexo目录下,Quicker使用
         Args:
             file_name (str): 文件名
         """
@@ -230,48 +228,45 @@ class Ob2Hexo():
                 continue
             break
 
-        # 以下均为对front-matter和正文的处理
+        # front-matter和正文的处理
         fm.file_path = self.hexo_file_path
         if self.aliases_check:
-            # 别名检测
+            ali_list = []
             yaml_dict = fm.yaml_list2dict()
+
+            # 不管是否数组,转换为数组,方便后续选择
             if 'aliases' in yaml_dict.keys():
-                alia_str_type = type(yaml_dict['aliases'])  # aliases值的类型
-                while True:
+                if type(yaml_dict['aliases']) == str:
+                    ali_list.append(yaml_dict['aliases'])
+                else:
+                    ali_list.extend(yaml_dict['aliases'])
 
-                    print('=' * 20)
-                    if alia_str_type == list:
-                        for index, value in enumerate(yaml_dict['aliases']):
-                            print(f"{index + 1}:{value}\n")
-                    elif alia_str_type == str:
-                        print(f"1.{yaml_dict['aliases']}")
-                    print('=' * 20, '\n')
+            while True:
+                print('=' * 20)
+                for index, value in enumerate(ali_list):
+                    print(f"{index + 1}:{value}\n")
+                print('=' * 20, '\n')
 
-                    answer = input('是否采用别名的话(序号/No)?')
-                    if alia_str_type == list and int(answer) < len(yaml_dict['aliases']) and answer.isdigit():
-                        rpl_title = yaml_dict['aliases'][int(answer) - 1]
-                        fm.edit_value(attr='name', after_value=rpl_title)  # 将标题修改为别名
-
-                    elif alia_str_type == str and answer == '1':
-                        rpl_title = yaml_dict['aliases']
-                        fm.edit_value(attr='name', after_value=rpl_title)
-                    elif answer.lower() == 'no':
-                        print('采用原标题')
-                        sleep(3)
-                    else:
-                        print('请输入正确选项！')
-                        sleep(3)
-                        os.system("cls")
-                        continue
-                    # 正确选项之内(序号、no)退出循环
-                    break
+                answer = input('是否采用别名的话(序号/No)?')
+                if answer.isdigit() and int(answer) <= len(ali_list):
+                    rpl_title = ali_list[int(answer) - 1]
+                    fm.edit_value(attr='name', after_value=rpl_title)
+                elif answer.lower() == 'no':
+                    print('采用原标题')
+                    sleep(3)
+                else:
+                    print('请输入正确选项！')
+                    sleep(3)
+                    os.system("cls")
+                    continue
+                break
 
         if self.syncTags_rpl:
             # 移除公有标签
             fm.delete_value(["tags", f"{self.sync_tags}"])
 
         if self.del_list:
-            # 属性指定属性
+            # 删除指定属性
             for del_str in self.del_list:
                 fm.delete_attr(del_str)
 
@@ -286,12 +281,13 @@ class Ob2Hexo():
 
 
 if __name__ == '__main__':
-    # file_name = sys.argv[1]
-    file_name = r"正则的绝对匹配和部分匹配"  # 测试使用
+    file_name = sys.argv[1]
+    # file_name = r"未命名 4"  # 测试使用
     # h_file_name = r"C:\Hexo\source\_posts\图片路径测试.md"  # 测试使用
     # print(file_name)
     ob2hexo = Ob2Hexo(file_name)
     ob2hexo.main()
+    # print(ob2hexo.file_name)
     # print(ob2hexo.aliases_check)
     # ob2hexo = Ob2Hexo()
     # ob2hexo.tags_sync(True)
