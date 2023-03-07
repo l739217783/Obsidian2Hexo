@@ -128,28 +128,44 @@ class Ob2Hexo():
         self.write_file(file_path, content)
 
     def get_photo(self, file_path):
-        """将md文件中的所有图片复制到Hexo目录下
+        """
+        将md文件中的所有图片复制到Hexo目录下
+        修改图片路径成Hexo的相对路径
         Args:
             file_path (str): 文件路径(Hexo的md文件路径)
         """
         content = self.read_file(file_path)
-        pattern = re.compile(r'(?:!\[(.*?)\]\((.*?)\))', re.M)
+        pattern = re.compile(r'(?:!\[(.*?)\]\((.*?)\))', re.M)  # 匹配：![]()
+        pattern_wiki = re.compile(r'(?:!\[\[(.*?)\]\])', re.M)  # 匹配：![[]]
 
-        result = pattern.findall(content)
-
-        # 获取md文档中的所有图片链接,修改图片路径成相对路径
-        for photo in result:
-            photo_name = os.path.split(photo[1])[1]  # 无转码的无路径图片名
+        # 匹配：![]()
+        for photo in pattern.findall(content):
+            photo_name = os.path.split(photo[1])[1]
             if photo_name.find('.') == -1:
-                # 图片名没有.的跳过，有可能是说明：`![]()` 或者其他特殊情况
+                # 图片名没有.的跳过，有可能是文章参考说明：`![]()` 或者其他特殊情况
                 continue
-            r_photo_name = photo_name.replace(
-                '%20', ' ')  # 移除空格，编码转换回空格(复制图片使用)
-            # print(photo, photo_name, r_photo_name)
+
+            # 编码转换回空格（Typora粘贴可能会转码）
+            r_photo_name = photo_name.replace('%20', ' ')
             shutil.copyfile(os.path.join(self.photo_path, r_photo_name), os.path.join(
                 self.hexo_photo_path, r_photo_name))
+
             content = content.replace(
-                photo[1], f"{os.path.join('../images/',photo_name)}")
+                photo[1], f"{os.path.join('../images/',photo_name.replace(' ','%20'))}")
+
+        # 匹配：![[]]
+        for i in pattern_wiki.findall(content):
+            if i.find('.') == -1:
+                continue
+
+            # 编码转换回空格（Typora粘贴可能会转码）,防止复制失败
+            r_i_name = i.replace('%20', ' ')
+            shutil.copyfile(os.path.join(self.photo_path, r_i_name), os.path.join(
+                self.hexo_photo_path, r_i_name))
+
+            # 替换连接形式，图片空格改%20
+            content = content.replace(
+                f"![[{i}]]", f"![]({os.path.join('../images/',i.replace(' ','%20'))})")
 
         self.write_file(file_path, content)
 
