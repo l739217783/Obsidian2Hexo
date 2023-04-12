@@ -59,7 +59,7 @@ def get_info(yaml_content: list, body: list):
 
 
 @rw_file
-def edit_attr(yaml_content: list, body: list, attr_before: str = None, attr_after: str = None, replace_dict: dict = None) -> str:
+def edit_attr(yaml_content: list, body: list, attr_before: str = None, attr_after: str = None, replace_dict: dict = None) -> str:  # noqa: E501
     """修改属性名称
     @param yaml_content:Front-matter内容
     @param body:正文内容
@@ -115,8 +115,10 @@ def edit_value(yaml_content: list, body: list, attr: str, before_value: str = No
                     raise Exception('请提供准确参数')
 
                 # 计算位置、整体位置位于：当前行+要更新的属性值在数组中的位置
-                up_value_index = index + yaml_dict[attr].index(before_value) + 1
-                yaml_content[up_value_index] = yaml_content[up_value_index].replace(before_value, after_value)
+                up_value_index = index + \
+                    yaml_dict[attr].index(before_value) + 1
+                yaml_content[up_value_index] = yaml_content[up_value_index].replace(
+                    before_value, after_value)
             break
     yaml_content.extend(body)  # 重新组合成全文(yaml_content+body)
     return ''.join(yaml_content)  # 列表转回文本
@@ -266,25 +268,9 @@ def get_tags() -> list:
                 tag_max = index
                 break
 
-    taglist = [i.replace('\n', '').replace('- ', '').strip() for i in yaml[tag_min:tag_max]]
+    taglist = [i.replace('\n', '').replace('- ', '').strip()
+               for i in yaml[tag_min:tag_max]]
     return taglist
-
-
-def sx(x):
-    """
-    判断指定路径在不在要跳过的列表中，在的话返回True，不在的话False
-    @param x:
-    @return:
-    """
-    ignore = [
-        r'C:\0资源库\0_笔记库\.obsidian', r"C:\0资源库\0_笔记库\.stfolder", r"C:\0资源库\0_笔记库\.trash", r"C:\0资源库\0_笔记库\assets",
-        r"C:\0资源库\0_笔记库\config", r"C:\0资源库\0_笔记库\config\Templates"
-    ]  # 要忽略，跳过的文件（例如工作区文件就肯定是没有Front-matter的）
-
-    for i in ignore:
-        if x.find(i) > -1:
-            return True
-    return False
 
 
 if __name__ == '__main__':
@@ -297,5 +283,5 @@ if __name__ == '__main__':
     #             edit_attr()
 
     # print(get_tags())
-    file_path = r"C:\0系统库\桌面\新建文件夹 (3)\剪切板的调用.md"
-    print(yaml_list2dict())
+    file_path = r"test.md"
+    pass

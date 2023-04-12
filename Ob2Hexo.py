@@ -24,7 +24,7 @@ class Ob2Hexo():
         # yapf:disable
         try:
             self.file_name = file_name
-            with open("D:\develop\Python\Quicker\Obsidian2Hexo\setting.json", encoding='utf-8') as f:
+            with open("setting.json", encoding='utf-8') as f:
                 setting = json.load(f)
                 self.ob_path = setting["ob_path"]                  # OB库的位置
                 self.photo_path = setting["photo_path"]            # OB图片位置
@@ -41,7 +41,7 @@ class Ob2Hexo():
                 self.hexo_file_path = os.path.join(
                     self.hexo_path, self.file_name + '.md') if file_name else None
                 # Hexo文章存放文件路径,可能采用存量同步(tag_sync,update_sync),默认None
-            if not os.path.exists("D:\develop\Python\Quicker\Obsidian2Hexo\Front_matter_edit.py"):
+            if not os.path.exists("Front_matter_edit.py"):
                 raise Exception('依赖文件确缺失')
         except FileNotFoundError:
             raise Exception("配置文件缺失")
@@ -292,8 +292,8 @@ class Ob2Hexo():
                         continue
                     break
 
-        if (self.syncTags_rpl) and (self.syncTags_rpl in yaml_dict.keys()):
-            # 移除公有标签，有的情况下)
+        if (self.syncTags_rpl) and (self.sync_tags in fm.get_tags()):
+            # 移除公有标签，有的情况下
             fm.delete_value(["tags", f"{self.sync_tags}"])
 
         if self.del_list:
@@ -313,12 +313,11 @@ class Ob2Hexo():
 
 if __name__ == '__main__':
     # file_name = sys.argv[1]
-    file_name = r"实践_日历"  # 测试使用
-    # h_file_name = r"C:\Hexo\source\_posts\图片路径测试.md"  # 测试使用
-    # print(file_name)
+    file_name = 'Hexo_Waline独立部署'
     ob2hexo = Ob2Hexo(file_name)
+    # print(ob2hexo)
     ob2hexo.main()
-    # print(ob2hexo.file_name)
-    # print(ob2hexo.aliases_check)
+
+    # 全部更新
     # ob2hexo = Ob2Hexo()
     # ob2hexo.tags_sync(True)
