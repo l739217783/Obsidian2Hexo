@@ -153,7 +153,13 @@ def delete_attr(yaml_content: list, body: list, attr: str):
                 n_yaml_list.extend(yaml_content[:index])
                 n_yaml_list.extend(yaml_content[start:])
             break
-    n_yaml_list.extend(body)  # 重新组合成全文(yaml_content+body)
+
+    # 找到(新的yaml_content+body)
+    # 没找到(yaml_content+body)
+    if n_yaml_list:
+        n_yaml_list.extend(body)
+    else:
+        n_yaml_list = yaml_content + body
     return ''.join(n_yaml_list)  # 列表转回文本
 
 
@@ -274,14 +280,14 @@ def get_tags() -> list:
 
 
 if __name__ == '__main__':
-    # for root, dirs, file in os.walk(r"C:\0系统库\桌面\新建文件夹 (3)"):
-    #     if sx(root):
-    #         continue
-    #     for i in file:
-    #         if i.endswith('.md'):
-    #             file_path = root + '/' + i
-    #             edit_attr()
 
-    # print(get_tags())
-    file_path = r"test.md"
-    pass
+    for root, dirs, file in os.walk(r'D:\develop\Python\DOM'):
+
+        for i in file:
+            if i.endswith('.md'):
+                print(i)
+                file_path = os.path.join(root, i)
+                # edit_attr()
+                delete_attr(attr='parent')
+    # file_path = r"test.md"
+    # pass
