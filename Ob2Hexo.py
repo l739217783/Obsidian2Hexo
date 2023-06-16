@@ -26,12 +26,12 @@ class Ob2Hexo():
             self.file_name = file_name
             with open("setting.json", encoding='utf-8') as f:
                 setting = json.load(f)
-                self.ob_path = setting["ob_path"]                  # OB库的位置
-                self.photo_path = setting["photo_path"]            # OB图片位置
-                self.hexo_path = setting["hexo_path"]              # Hexo文章位置
+                self.ob_path = setting["ob_path"]  # OB库的位置
+                self.photo_path = setting["photo_path"]  # OB图片位置
+                self.hexo_path = setting["hexo_path"]  # Hexo文章位置
                 self.hexo_photo_path = setting["hexo_photo_path"]  # Hexo图片位置
-                self.rep_dict = setting["rep_dict"]                # 替换的属性
-                self.del_list = setting["del_list"]                # 删除的属性
+                self.rep_dict = setting["rep_dict"]  # 替换的属性
+                self.del_list = setting["del_list"]  # 删除的属性
                 # 同步标签，用于存量同步
                 self.sync_tags = setting["sync_tags"]
                 # 别名检测,默认true
@@ -46,24 +46,24 @@ class Ob2Hexo():
         except FileNotFoundError:
             raise Exception("配置文件缺失")
 
-    def replace(self, file, old_content, new_content):
-        """给定文件路径,将旧内容替换为新内容
-        Args:
-            file (str): 文件路径
-            old_content (str): 旧内容
-            new_content (str): 新内容
+    def replace(self, file: str, old_content: str, new_content: str) -> None:
+        """
+        给定文件路径,将旧内容替换为新内容
+        :param file:文件路径
+        :param old_content: 旧内容
+        :param new_content:新内容
+        :return:
         """
         content = self.read_file(file)
         content = content.replace(old_content, new_content)
         self.write_file(file, content)
 
-    def read_file(self, file_path, mode='read'):
-        """读文件内容
-        Args:
-            file_path (str): 文件路径
-            mode(str):read、readline
-        Returns:
-            str: 文件内容
+    def read_file(self, file_path: str, mode: str = 'read') -> str:
+        """
+        给定文件路径，读取文件内容
+        :param file_path: 文件路径
+        :param mode: read、readline
+        :return: 文件内容
         """
         with open(file_path, 'r', encoding='UTF-8') as f:
             if mode == 'read':
@@ -74,11 +74,12 @@ class Ob2Hexo():
 
         return read_all
 
-    def write_file(self, file_path, data):
-        """写内容到文件
-        Args:
-            file_path (str): 文件路径
-            data (str): 文件内容
+    def write_file(self, file_path: str, data: str) -> None:
+        """
+        写内容到文件
+        :param file_path: 文件路径
+        :param data: 文件内容
+        :return:
         """
         with open(file_path, 'w', encoding='UTF-8') as f:
             f.write(data)
@@ -106,7 +107,7 @@ class Ob2Hexo():
                         title = title.replace(tag_value, "").strip()
                         # 如果标题仅有callout，例如：>[!note]，那么不增加标题信息，有的话增加一行标题信息
                         content[index] = "{% note " + tag_value + " %}\n" if title == '' else "{% note " + \
-                            tag_value + " %}\n" + f"{title}\n"  # yapf:disable
+                                                                                              tag_value + " %}\n" + f"{title}\n"  # yapf:disable
                         break
                     elif title.find(tag_value) == -1 and tag_index == (len(tag) - 1):
                         # 如果是采用自拟标题：>[!笔记二]-，并且没有找任意支持标签，默认采用note light标签
@@ -123,6 +124,7 @@ class Ob2Hexo():
             if index + 1 == len(content) and quote.search(value):
                 # 如果最后是引用,没有空行可以转换收尾标签,多添加一行收尾标签
                 content.append('{% endnote %}\n\n')
+                # TODO: 最后一行是引用可能会导致错误，例如最后一行是引用，那么就会多添加一行收尾标签，而没有开头，导致转换错误
 
         content = ''.join(content)
         self.write_file(file_path, content)
@@ -151,7 +153,7 @@ class Ob2Hexo():
                 self.hexo_photo_path, r_photo_name))
 
             content = content.replace(
-                photo[1], f"{os.path.join('../images/',photo_name.replace(' ','%20'))}")
+                photo[1], f"{os.path.join('../images/', photo_name.replace(' ', '%20'))}")
 
         # 匹配：![[]]
         for i in pattern_wiki.findall(content):
@@ -165,7 +167,7 @@ class Ob2Hexo():
 
             # 替换连接形式，图片空格改%20
             content = content.replace(
-                f"![[{i}]]", f"![]({os.path.join('../images/',i.replace(' ','%20'))})")
+                f"![[{i}]]", f"![]({os.path.join('../images/', i.replace(' ', '%20'))})")
 
         self.write_file(file_path, content)
 
@@ -230,40 +232,14 @@ class Ob2Hexo():
                     self.adn2note(hexo_file_path)  # callout 转换
                     self.get_photo(hexo_file_path)  # 复制图片到Hexo目录下
 
-    def main(self):
-        """给定文件名，拷贝文件(md、相关图片)到hexo目录下,Quicker使用
-        Args:
-            file_name (str): 文件名
-        """
-        title = re.compile(f'^{self.file_name}$')
+    def contentProcess(self, file_path):
+        """front-matter和正文的处理"""
 
-        # 复制文件
-        for root, dirs, files in os.walk(self.ob_path):
-            for file in files:
-                result = title.search(os.path.splitext(file)[0])
-                if result:
-                    if os.path.exists(self.hexo_file_path):
-                        while (True):
-                            answer = input('文件已存在，是否覆盖文件(yes/no)?')
-                            if answer == 'yes':
-                                break
-                            elif answer == 'no':
-                                sys.exit(0)
-                            os.system("cls")
-                            continue
-                    shutil.copyfile(os.path.join(root, file),
-                                    self.hexo_file_path)
-                    break  # 找到文件直接退出遍历
-            else:
-                continue
-            break
-
-        # front-matter和正文的处理
-        fm.file_path = self.hexo_file_path
+        fm.file_path = file_path
         if self.aliases_check:
             ali_list = []
             yaml_dict = fm.yaml_list2dict()
-            print(yaml_dict.keys())
+            # print(yaml_dict.keys())
 
             if 'aliases' in yaml_dict.keys():
                 # 不管是否数组,转换为数组,方便后续选择
@@ -292,7 +268,7 @@ class Ob2Hexo():
                         continue
                     break
 
-        if (self.syncTags_rpl) and (self.sync_tags in fm.get_tags()):
+        if self.syncTags_rpl and (self.sync_tags in fm.get_tags()):
             # 移除公有标签，有的情况下
             fm.delete_value(["tags", f"{self.sync_tags}"])
 
@@ -305,19 +281,161 @@ class Ob2Hexo():
             # 替换指定属性
             fm.edit_attr(replace_dict=self.rep_dict)
 
-        self.adn2note(self.hexo_file_path)  # callout 转换
-        self.get_photo(self.hexo_file_path)  # 资源拷贝(图片)
+        self.adn2note(file_path)  # callout 转换
+        self.get_photo(file_path)  # 资源拷贝(图片)
 
+    def main(self):
+        """给定文件名，拷贝文件(md、相关图片)到hexo目录下,Quicker使用
+
+        :return:
+        """
+        """
+        Args:
+            file_name (str): 文件名
+        """
+        title = re.compile(f'^{self.file_name}$')
+
+        # 复制文件
+        for root, dirs, files in os.walk(self.ob_path):
+            for file in files:
+                result = title.search(os.path.splitext(file)[0])
+                if result:
+                    if os.path.exists(self.hexo_file_path):
+                        while True:
+                            answer = input('文件已存在，是否覆盖文件(yes/no)?')
+                            if answer == 'yes':
+                                break
+                            elif answer == 'no':
+                                sys.exit(0)
+                            os.system("cls")
+                            continue
+                    shutil.copyfile(os.path.join(root, file),
+                                    self.hexo_file_path)
+                    break  # 找到文件直接退出遍历
+            else:
+                continue
+            break
+
+        self.contentProcess(self.hexo_file_path)  # front-matter和正文的处理
+
+        fm.file_path = self.hexo_file_path
+        yaml_dict = fm.yaml_list2dict()
+        if yaml_dict:
+            if '学习/读书笔记' in yaml_dict['tags']:
+                # 链接转换+子笔记文件迁移
+                if self.doubleLink2webHref(self.hexo_file_path):
+                    # 遍历子笔记文件，进行内容处理
+                    file_path = r'D:\Software\Hexo\source\reading_note'
+                    for i in os.listdir(file_path):
+                        if i == 'index.md':
+                            continue
+                        self.addHtml(os.path.join(file_path, i))
+                        self.contentProcess(os.path.join(file_path, i))
+
+                # 主笔记迁移：从Hexo的posts文件夹移动到reading_note文件夹
+                new_path = os.path.join(
+                    r'D:/Software/Hexo/source/reading_note', file_name + '.md')
+                shutil.move(self.hexo_file_path, new_path)
         sys.exit(0)
+
+    def addHtml(self, file_path):
+        """读书笔记专用，开头和结尾添加div标签，否则引用样式没有灰色边的样式"""
+
+        fm.file_path = file_path
+        content = fm.get_info()
+        yaml_dict = fm.yaml_list2dict()
+
+        if content:
+            if content['yaml']:
+                yaml_content = content['yaml']
+                if 'hide' not in yaml_dict:
+                    # 检测是否有 hide 属性（用于隐藏），没有则添加
+                    yaml_content.insert(-1, "hide: true\n")
+                if 'comment' not in yaml_dict:
+                    # 检测是否有 comment 属性（用于评论），没有则添加
+                    yaml_content.insert(-2, "comment: waline\n")
+
+            body = content['body']
+            body.insert(0, '<div class="markdown-body">\n')
+            body.append("\n</div>")
+            yaml_content.extend(body)
+            write_content = ''.join(yaml_content)
+            self.write_file(file_path, write_content)
+
+    def doubleLink2webHref(self, file_path):
+        """双链转换为网页链接
+        1.将读书笔记中的双链全部转换为网页链接
+        2.将对应的笔记全部复制一份到Hexo目录下
+        """
+        content = self.read_file(file_path)
+        pattern_wiki = re.compile(r'\[\[(.*?)\]\]', re.M)  # wiki写法
+        pattern_md = re.compile(r'\[(.*?)\]\((.*?)\)', re.M)  # md写法
+        result = False
+
+        # md链接替换
+        for href in pattern_md.findall(content):
+            result = True
+            # 新链接
+            if '.md' in href[1]:
+                # 文件名有.md，提取文件名，重新组合：网页链接+ 文件名.html
+                # ('不要去想人生的意义', '不要去想人生的意义.md')，href[1] ='不要去想人生的意义.md'
+                # os.path.splitext(href[1])[1] = '.md'
+                web_link = 'https://linguoguang.com/reading_note/' + \
+                           os.path.splitext(href[1])[0] + '.html'
+            else:
+                # 无md后缀，直接组合：网页链接+ 文件名.html
+                web_link = web_link = 'https://linguoguang.com/reading_note/' + \
+                                      href[1] + '.html'
+
+            # 替换成网页链接
+            content = content.replace(f'[{href[0]}]({href[1]})',
+                                      f'[{href[0]}]({web_link})')
+
+            # 复制文件
+            for root, dirs, files in os.walk(self.ob_path):
+                for file in files:
+                    if href[1] in file:
+                        shutil.copyfile(os.path.join(root, file),
+                                        os.path.join(r'D:/Software/Hexo/source/reading_note', file))
+                        break
+                else:
+                    continue
+                break
+
+        # wiki链接替换
+        for wiki_href in pattern_wiki.findall(content):
+            result = True
+            # print(wiki_href)
+            # 网页链接+ 文件名.html
+            web_link = 'https://linguoguang.com/reading_note/' + wiki_href + '.html'
+
+            # 替换成网页链接
+            content = content.replace(f'[[{wiki_href}]]',
+                                      f'[{wiki_href}]({web_link})')
+
+            # 复制文件
+            for root, dirs, files in os.walk(self.ob_path):
+                for file in files:
+                    if wiki_href in file:
+                        shutil.copyfile(os.path.join(root, file),
+                                        os.path.join(r'D:/Software/Hexo/source/reading_note', file))
+                        break
+                else:
+                    continue
+                break
+
+        self.write_file(file_path, content)
+
+        return result
 
 
 if __name__ == '__main__':
-    # file_name = sys.argv[1]
-    file_name = 'Hexo_Waline独立部署'
+    file_name = sys.argv[1]
+    # file_name = '《拆掉思维里的墙》'
+
     ob2hexo = Ob2Hexo(file_name)
-    # print(ob2hexo)
     ob2hexo.main()
 
-    # 全部更新
+    # 对已有文章进行更新
     # ob2hexo = Ob2Hexo()
-    # ob2hexo.tags_sync(True)
+    # ob2hexo.sync_tags()
